@@ -12,7 +12,7 @@ module "acm" {
   san      = ["*.dev.example.com"]
 
   providers = {
-    aws.tokyo    = aws.tokyo
+    aws          = aws
     aws.virginia = aws.virginia
     aws.route53  = aws.route53
   }
@@ -117,7 +117,7 @@ module "iam_role_cognito_auth" {
       }
       Condition = {
         StringEquals = {
-          "cognito-identity.amazonaws.com:aud" = module.cognito.attrs.identity_pool_id
+          "cognito-identity.amazonaws.com:aud" = module.cognito_line_oidc.attrs.identity_pool_id
         },
         "ForAnyValue:StringLike" = {
           "cognito-identity.amazonaws.com:amr" = "authenticated"
@@ -326,9 +326,9 @@ module "iam_attachment_lambda_exec" {
 }
 
 # github actions role
-module "iam_role_github_actions" {
+module "iam_role_github_actions_oidc" {
   source    = "../../modules/iam_role"
-  role_name = "${local.name_prefix}-github-actions"
+  role_name = "${local.name_prefix}-github-actions-oidc"
 
   assume_role_statements = [
     {
@@ -342,9 +342,7 @@ module "iam_role_github_actions" {
           "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
         }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = [
-            "repo:${var.github_repo}:*"
-          ]
+          "token.actions.githubusercontent.com:sub" = "repo:${var.github_repo}:*"
         }
       }
     }
@@ -355,7 +353,7 @@ module "iam_role_github_actions" {
 module "iam_policy_github_actions" {
   source      = "../../modules/iam_policy"
   policy_name = "${local.name_prefix}-github-actions"
-  role_id     = module.iam_role_github_actions.attrs.id
+  role_id     = module.iam_role_github_actions_oidc.attrs.id
 
   policy_statements = [
     {
@@ -416,8 +414,209 @@ module "iam_policy_github_actions" {
         "cloudfront:CreateInvalidation"
       ]
       resources = [
-        "${module.cloudfront_distribution_admin_origin.attrs.arn}"
+        "${module.landing_page_cfd_admin.attrs.arn}"
       ]
+    }
+  ]
+}
+
+## S3 ##
+# resources origin bucket
+module "s3_bucket_resources_origin" {
+  source      = "../../modules/s3_bucket"
+  bucket_name = "${local.name_prefix}-resources-origin"
+
+  cors_rules = [
+    {
+      allowed_methods = ["GET"]
+      allowed_origins = ["*"]
+    }
+  ]
+}
+
+# admin origin bucket
+module "s3_bucket_admin_origin" {
+  source      = "../../modules/s3_bucket"
+  bucket_name = "${local.name_prefix}-admin-origin"
+
+  cors_rules = [
+    {
+      allowed_methods = ["GET"]
+      allowed_origins = ["*"]
+    }
+  ]
+}
+
+# admin logging bucket
+module "s3_bucket_admin_logging" {
+  source = "../../modules/s3_bucket"
+  bucket_name = "${local.name_prefix}-admin-logging"
+}
+
+module "s3_bucket_policy_resources_origin" {
+  source = "../../modules/s3_bucket_policy"
+
+  bucket_id = module.s3_bucket_resources_origin.attrs.bucket_id
+  policy_statements = [
+    {
+      Sid    = "AllowCloudFrontAccess"
+      Effect = "Allow"
+      Principal = {
+        "Service" : "cloudfront.amazonaws.com"
+      },
+      Action   = "s3:GetObject",
+      Resource = "${module.s3_bucket_resources_origin.attrs.arn}/*",
+      Condition = {
+        StringEquals = {
+          "AWS:SourceArn" : "${module.s3_bucket_cfd_resources.attrs.arn}"
+        }
+      }
+    }
+  ]
+}
+
+module "s3_bucket_policy_admin_origin" {
+  source = "../../modules/s3_bucket_policy"
+
+  bucket_id = module.s3_bucket_admin_origin.attrs.bucket_id
+  policy_statements = [
+    {
+      Sid    = "AllowCloudFrontAccess"
+      Effect = "Allow"
+      Principal = {
+        "Service" : "cloudfront.amazonaws.com"
+      },
+      Action   = [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:ListBucket"
+      ]
+      Resource = [
+      "${module.s3_bucket_admin_origin.attrs.arn}",
+      "${module.s3_bucket_admin_origin.attrs.arn}/*"
+      ]
+      Condition = {
+        StringEquals = {
+          "AWS:SourceArn" : "${module.landing_page_cfd_admin.attrs.arn}"
+        }
+      }
+    },
+    {
+      Sid = "AllowGithubActionsAccess",
+      Effect = "Allow",
+      Principal = {
+        "AWS" : "${module.iam_role_github_actions_oidc.attrs.arn}"
+      },
+      Action = [
+        "s3:ListBucket",
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      Resource = [
+        "${module.s3_bucket_admin_origin.attrs.arn}",
+        "${module.s3_bucket_admin_origin.attrs.arn}/*"
+      ]
+    }
+  ]
+}
+
+module "aws_s3_bucket_ownership_controls" {
+  source = "../../modules/s3_bucket_ownership_controls"
+
+  bucket_id = module.s3_bucket_admin_logging.attrs.id
+  object_ownership = "BucketOwnerPreferred"
+}
+
+module "s3_bucket_acl_admin" {
+  source = "../../modules/s3_bucket_acl"
+  depends_on = [ module.aws_s3_bucket_ownership_controls ]
+
+  bucket_id = module.s3_bucket_admin_logging.attrs.id
+  acl = "private"
+}
+
+## CFD ##
+# resources cfd
+module "s3_bucket_cfd_resources" {
+  source = "../../modules/cfd/s3_bucket_cfd"
+
+  oac_name    = "${local.name_prefix}-resources-oac"
+  domain_name = module.s3_bucket_resources_origin.attrs.bucket_regional_domain_name
+  origin_id   = "${local.name_prefix}-resources-origin"
+
+  price_class         = "PriceClass_200"
+  default_root_object = "index.html"
+  alias_domain        = ["resources.${var.domain}"]
+
+  allowed_methods = ["GET", "HEAD"]
+  cached_methods  = ["GET", "HEAD"]
+
+  forward_query_string = false
+  forward_cookies      = "none"
+
+  viewer_protocol_policy = "redirect-to-https"
+  min_ttl                = 0
+  default_ttl            = 3600
+  max_ttl                = 86400
+
+  geo_restriction_type           = "none"
+  cloudfront_default_certificate = false
+  acm_certificate_arn            = module.acm.virginia_cert.arn
+  ssl_support_method             = "sni-only"
+  minimum_protocol_version       = "TLSv1.2_2019"
+}
+
+# admin cfd
+module "landing_page_cfd_admin" {
+  source = "../../modules/cfd/landing_page_cfd"
+
+  func_name = "${local.name_prefix}-basic-auth"
+  runtime = "cloudfront-js-2.0"
+  comment = "${local.name_prefix}-basic-auth"
+  is_publish = true
+  basic_auth_users = [
+    { username = "lp_admin_user"}
+  ]
+  basic_auth_passwords = module.secrets.admin_auth_pass_value
+
+  oac_name    = "${local.name_prefix}-admin-oac"
+  domain_name = module.s3_bucket_admin_origin.attrs.bucket_regional_domain_name
+  origin_id   = "${local.name_prefix}-admin-origin"
+
+  price_class         = "PriceClass_200"
+  default_root_object = "index.html"
+  alias_domain        = ["resources.${var.domain}"]
+
+  allowed_methods = ["GET", "HEAD"]
+  cached_methods  = ["GET", "HEAD"]
+
+  forward_query_string = false
+  forward_cookies      = "none"
+
+  viewer_protocol_policy = "redirect-to-https"
+  min_ttl                = 0
+  default_ttl            = 3600
+  max_ttl                = 86400
+
+  geo_restriction_type           = "none"
+  cloudfront_default_certificate = false
+  acm_certificate_arn            = module.acm.virginia_cert.arn
+  ssl_support_method             = "sni-only"
+  minimum_protocol_version       = "TLSv1.2_2019"
+
+  custom_error_responses = [
+    {
+      error_code = 403
+      response_code = 200
+      response_page_path = "/index.html"
+      error_caching_min_ttl = 10
+    },
+    {
+      error_code = 404
+      response_code = 200
+      response_page_path = "/index.html"
+      error_caching_min_ttl = 10
     }
   ]
 }
@@ -426,7 +625,7 @@ module "iam_policy_github_actions" {
 module "instance_profile_redash" {
   source                = "../../modules/instance_profile"
   instance_profile_name = "${local.name_prefix}-instance-profile-redash"
-  role_name             = module.iam_role_redash.attrs.name
+  role_name             = module.iam_role_ec2.attrs.name
 }
 
 ## Server ##
@@ -437,7 +636,7 @@ module "ec2_redash_1a" {
   instance_type          = local.ec2_conf.redash.instance_type
   subnet_id              = module.vpc_core.public_subnets["public-1a"].id
   vpc_security_group_ids = [module.redash_sg.attrs.id]
-  iam_instance_profile   = module.iam_role_redash.attrs.name
+  iam_instance_profile   = module.instance_profile_redash.attrs.name
 }
 
 ## Network ##
@@ -462,7 +661,7 @@ module "eip_nat_1c" {
 
 module "eip_redash_1a" {
   source      = "../../modules/elastic_ip"
-  instance_id = module.ec2_redash_1a.id
+  instance_id = module.ec2_redash_1a.attrs.id
 }
 
 # Internet Gateway

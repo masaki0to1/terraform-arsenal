@@ -17,12 +17,12 @@ resource "aws_cloudwatch_metric_alarm" "this" {
   comparison_operator = var.comparison_operator
   evaluation_periods  = var.evaluation_periods
   metric_name         = var.metric_transformation.name
-  namespace          = var.metric_transformation.namespace
-  period             = var.period
-  statistic          = var.statistic
-  threshold          = var.threshold
-  treat_missing_data = var.treat_missing_data
-  
+  namespace           = var.metric_transformation.namespace
+  period              = var.period
+  statistic           = var.statistic
+  threshold           = var.threshold
+  treat_missing_data  = var.treat_missing_data
+
   alarm_actions = var.alarm_actions
   ok_actions    = var.ok_actions
 

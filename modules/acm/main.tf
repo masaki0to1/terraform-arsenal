@@ -10,7 +10,7 @@ resource "aws_acm_certificate" "virginia" {
 }
 
 resource "aws_acm_certificate" "tokyo" {
-  provider                  = aws.tokyo
+  provider                  = aws
   validation_method         = var.acm_conf.method
   domain_name               = var.domain
   subject_alternative_names = var.san
