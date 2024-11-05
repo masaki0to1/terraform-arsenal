@@ -1,0 +1,41 @@
+# Local Terraform execution files
+**/.terraform/*
+
+# tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Files that may contain sensitive information
+*.tfvars
+*.tfvars.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Variable definition files (comment out as needed)
+# *.auto.tfvars
+# *.auto.tfvars.json
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Configuration files
+.terraform.lock.hcl
+
+# Editor temporary files
+.idea/
+*.swp
+*.swo
+*~
+
+# System files
+.DS_Store
+Thumbs.db
