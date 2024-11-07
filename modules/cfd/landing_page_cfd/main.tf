@@ -13,11 +13,11 @@ resource "aws_cloudfront_origin_access_control" "this" {
 }
 
 resource "aws_cloudfront_function" "this" {
-  name = var.func_name
+  name    = var.func_name
   runtime = var.runtime
   comment = var.comment
   publish = var.is_publish
-  code = <<-EOT
+  code    = <<-EOT
 function hander(event) {
   var request = event.request;
   var headers = request.headers;
@@ -95,7 +95,7 @@ resource "aws_cloudfront_distribution" "this" {
     }
 
     function_association {
-      event_type = var.event_type
+      event_type   = var.event_type
       function_arn = aws_cloudfront_function.this.arn
     }
 

@@ -5,6 +5,13 @@ variable "bucket_id" {
 
 variable "policy_statements" {
   description = "S3 bucket policy statements"
-  type        = list(any)
-  default     = []
+  type = list(object({
+    Sid       = string
+    Effect    = string
+    Principal = map(string)
+    Action    = list(string)
+    Resource  = list(string)
+    Condition = map(map(string))
+  }))
+  default = []
 }

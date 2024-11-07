@@ -188,5 +188,5 @@ variable "basic_auth_users" {
 
 variable "basic_auth_passwords" {
   description = "Map of usernames to passwords for basic authentication"
-  type = map(string)
+  type        = map(string)
 }
