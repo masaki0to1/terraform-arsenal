@@ -33,14 +33,14 @@ module "s3_bucket_cfd_resources" {
 module "landing_page_cfd_admin" {
   source = "../../modules/cfd/landing_page_cfd"
 
-  func_name = "${local.name_prefix}-basic-auth"
-  runtime = "cloudfront-js-2.0"
-  comment = "${local.name_prefix}-basic-auth"
+  func_name  = "${local.name_prefix}-basic-auth"
+  runtime    = "cloudfront-js-2.0"
+  comment    = "${local.name_prefix}-basic-auth"
   is_publish = true
   basic_auth_users = [
-    { username = "lp_admin_user"}
+    { username = var.user_admin }
   ]
-  basic_auth_passwords = module.secrets.admin_auth_pass_value
+  basic_auth_passwords = module.secret_authpass_admin.auth_user_pass_map
 
   oac_name    = "${local.name_prefix}-admin-oac"
   domain_name = module.s3_bucket_admin_origin.attrs.bucket_regional_domain_name
@@ -69,15 +69,15 @@ module "landing_page_cfd_admin" {
 
   custom_error_responses = [
     {
-      error_code = 403
-      response_code = 200
-      response_page_path = "/index.html"
+      error_code            = 403
+      response_code         = 200
+      response_page_path    = "/index.html"
       error_caching_min_ttl = 10
     },
     {
-      error_code = 404
-      response_code = 200
-      response_page_path = "/index.html"
+      error_code            = 404
+      response_code         = 200
+      response_page_path    = "/index.html"
       error_caching_min_ttl = 10
     }
   ]

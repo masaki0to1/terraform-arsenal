@@ -1,5 +1,6 @@
 locals {
   # basic settings
+  aws_profile       = "tf-user@Sandbox"
   env               = "dev"
   project           = "example"
   service           = "service"
