@@ -66,4 +66,5 @@ echo -n "${DECRYPTED}" > "${OUTPUT_FILE}"
 rm "${TMP_FILE}"
 
 # Output the result as JSON
-jq -n --arg key "decrypted_${PREFIX}" --arg value "${DECRYPTED}" '{($key): $value}'
+# jq -n --arg key "decrypted_${PREFIX}" --arg value "${DECRYPTED}" '{($key): $value}'
+jq -n --arg key "decrypted_secret" --arg value "${DECRYPTED}" '{($key): $value}'
