@@ -1,6 +1,9 @@
 # Local Terraform execution files
 **/.terraform/*
 
+# secrets file
+.decrypted_*
+
 # tfstate files
 *.tfstate
 *.tfstate.*
