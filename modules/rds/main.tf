@@ -41,27 +41,24 @@ resource "aws_db_parameter_group" "this" {
 }
 
 resource "aws_rds_cluster" "this" {
-  deletion_protection       = var.deletion_protection
-  skip_final_snapshot       = var.skip_final_snapshot
-  final_snapshot_identifier = "final-snapshot-${var.cluster_identifier}-deployed-at-${var.fmt_jst_timestamp}"
-  cluster_identifier        = var.cluster_identifier
-  apply_immediately         = var.apply_immediately_cluster
-  engine                    = var.engine
-  engine_version            = var.engine_version
-  availability_zones        = [for pri_sub in var.private_subnets : pri_sub.availability_zone]
-  database_name             = var.database_name
-  master_username           = var.master_username
-  master_password           = var.master_password
-  port                      = var.port
-
-  vpc_security_group_ids          = var.vpc_security_group_ids
-  db_subnet_group_name            = aws_db_subnet_group.this.name
-  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.this.name
-
-  backup_retention_period      = var.backup_retention_period
-  preferred_backup_window      = var.backup_window
-  preferred_maintenance_window = var.maintenance_window
-
+  deletion_protection                   = var.deletion_protection
+  skip_final_snapshot                   = var.skip_final_snapshot
+  final_snapshot_identifier             = "final-snapshot-${var.cluster_identifier}-deployed-at-${var.fmt_jst_timestamp}"
+  cluster_identifier                    = var.cluster_identifier
+  apply_immediately                     = var.apply_immediately_cluster
+  engine                                = var.engine
+  engine_version                        = var.engine_version
+  availability_zones                    = [for pri_sub in var.private_subnets : pri_sub.availability_zone]
+  database_name                         = var.database_name
+  master_username                       = var.master_username
+  master_password                       = var.master_password
+  port                                  = var.port
+  vpc_security_group_ids                = var.vpc_security_group_ids
+  db_subnet_group_name                  = aws_db_subnet_group.this.name
+  db_cluster_parameter_group_name       = aws_rds_cluster_parameter_group.this.name
+  backup_retention_period               = var.backup_retention_period
+  preferred_backup_window               = var.backup_window
+  preferred_maintenance_window          = var.maintenance_window
   storage_encrypted                     = var.storage_encrypted
   enabled_cloudwatch_logs_exports       = var.enabled_cloudwatch_logs_exports
   performance_insights_enabled          = var.performance_insights_enabled
