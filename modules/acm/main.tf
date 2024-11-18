@@ -21,7 +21,7 @@ resource "aws_acm_certificate" "tokyo" {
 }
 
 resource "aws_route53_record" "dvo" {
-  provider = aws.route53
+  provider = aws
   for_each = {
     for dvo in aws_acm_certificate.virginia.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
