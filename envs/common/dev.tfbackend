@@ -1,5 +1,5 @@
 region = "ap-northeast-1"
 bucket = "tf-state-282208395586"
-key = "common/locals.tfstate"
+key = "common/main.tfstate"
 profile = "tf-user@Sandbox"
 encrypt = true
