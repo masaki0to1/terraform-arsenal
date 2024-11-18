@@ -1,0 +1,12 @@
+# 機密情報（実際の値は空にしておく）
+# git clone後、以下の変数に適切な値を設定してください
+line_client_id     = ""
+line_client_secret = ""
+line_api_key       = ""
+dbpass            = ""
+authpass_redash   = ""
+authpass_admin    = ""
+
+# 非機密情報のデフォルト値
+github_repo = "your-repo-name"
+domain      = "example.com"
