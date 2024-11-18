@@ -3,6 +3,12 @@
 # Read JSON input from stdin
 read input
 
+# Check if jq is installed
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is not installed. Please install jq to continue." >&2
+    exit 1
+fi
+
 # Parse JSON input to get arguments
 AWS_PROFILE=$(echo "$input" | jq -r '.aws_profile')
 ENV=$(echo "$input" | jq -r '.env')
@@ -27,10 +33,11 @@ else
   PROFILE_CONTEXT=""
 fi
 
-
 # Ensure filesystem cache is cleared before reading files
 sync
-echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
+if [ -f /proc/sys/vm/drop_caches ]; then
+    echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
+fi
 
 # Find the latest encrypted file
 LATEST_ENCRYPTED_FILE=$(ls -t "${FILE_PATH}_20"* | head -n1)
