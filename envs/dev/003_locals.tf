@@ -93,14 +93,6 @@ locals {
   }
 
   cognito_conf = {
-    # user_pool_client = {
-    #   generate_secret                      = true # for backend
-    #   allowed_oauth_flows                  = ["code"]
-    #   allowed_oauth_flows_user_pool_client = true
-    #   enable_token_revocation              = true
-    #   prevent_user_existence_errors        = "ENABLED"
-    # }
-
     line_identity_provider = {
       name = "line"
       type = "OIDC"
