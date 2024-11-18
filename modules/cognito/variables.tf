@@ -53,184 +53,104 @@ variable "schema_attributes" {
   }))
 }
 
-// Identity Provider variables
-variable "provider_name" {
-  type        = string
-  description = "Name of the identity provider"
-}
-
-variable "provider_type" {
-  type        = string
-  description = "Type of the identity provider (e.g., OIDC, SAML)"
-}
-
-variable "client_id" {
-  description = "Client ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "client_secret" {
-  description = "Client Secret"
-  type        = string
-  sensitive   = true #
-}
-
-variable "provider_details" {
+variable "verification_message_template" {
+  description = "Configuration for verification message templates"
   type = object({
-    authorize_scopes              = string
-    attributes_request_method     = string
-    authorize_url                 = string
-    attributes_url_add_attributes = optional(string)
-    token_url                     = string
-    attributes_url                = string
-    jwks_uri                      = string
-    oidc_issuer                   = string
+    default_email_option = optional(string)
+    email_subject        = optional(string)
+    email_message        = optional(string)
+    sms_message          = optional(string)
   })
-  description = "Configuration details for the identity provider"
+  default = null
 }
 
-variable "attribute_mapping" {
-  type = object({
-    email    = string
-    username = string
-    name     = string
-  })
-  description = "Mapping of provider attributes to Cognito attributes"
-}
+variable "identity_providers" {
+  description = "Map of identity providers configuration"
+  type = map(object({
+    provider_name     = string
+    provider_type     = string
+    provider_details  = any # Set to 'any' to support different identity providers
+    attribute_mapping = map(string)
+    idp_identifiers   = optional(list(string))
+  }))
+  default = {}
 
-variable "idp_identifiers" {
-  type        = list(string)
-  description = "List of identity provider identifiers"
-  default     = []
-}
-
-// User Pool Client variables
-variable "client_name" {
-  type        = string
-  description = "Name of the Cognito user pool client"
-}
-
-variable "generate_secret" {
-  type        = bool
-  description = "Whether to generate a client secret"
-  default     = false
-}
-
-variable "allowed_oauth_flows" {
-  type        = list(string)
-  description = "List of allowed OAuth flows (e.g., code, implicit)"
-  default     = []
-}
-
-variable "allowed_oauth_flows_user_pool_client" {
-  type        = bool
-  description = "Whether to allow OAuth flows for the client"
-  default     = true
-}
-
-variable "allowed_oauth_scopes" {
-  type        = list(string)
-  description = "List of allowed OAuth scopes"
-  default     = []
-}
-
-variable "callback_urls" {
-  type        = list(string)
-  description = "List of allowed callback URLs"
-  default     = []
-}
-
-variable "logout_urls" {
-  type        = list(string)
-  description = "List of allowed logout URLs"
-  default     = []
-}
-
-variable "enable_token_revocation" {
-  type        = bool
-  description = "Whether to enable token revocation"
-  default     = true
-}
-
-variable "prevent_user_existence_errors" {
-  type        = string
-  description = "Choose which errors and responses are returned when the user does not exist"
-  default     = "ENABLED"
-}
-
-variable "explicit_auth_flows" {
-  type        = list(string)
-  description = "List of explicit authentication flows"
-  default     = []
-}
-
-variable "refresh_token_validity" {
-  type        = number
-  description = "Time limit in days for refresh token validity"
-  default     = 30
-}
-
-variable "access_token_validity" {
-  type        = number
-  description = "Time limit in hours for access token validity"
-  default     = 1
-}
-
-variable "id_token_validity" {
-  type        = number
-  description = "Time limit in hours for ID token validity"
-  default     = 1
-}
-
-variable "token_validity_units" {
-  type = object({
-    access_token  = string
-    id_token      = string
-    refresh_token = string
-  })
-  description = "Units for token validity (e.g., hours, days)"
-  default = {
-    access_token  = "hours"
-    id_token      = "hours"
-    refresh_token = "days"
+  validation {
+    condition = alltrue([
+      for k, v in var.identity_providers :
+      contains(["OIDC", "SAML", "Facebook", "Google", "LoginWithAmazon", "SignInWithApple"], v.provider_type)
+    ])
+    error_message = "provider_type must be one of: OIDC, SAML, Facebook, Google, LoginWithAmazon, SignInWithApple"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.identity_providers :
+      v.provider_type == "OIDC" ? (
+        can(v.provider_details.oidc_issuer) &&
+        can(v.provider_details.attributes_url)
+      ) : true
+    ])
+    error_message = "OIDC providers must specify oidc_issuer and attributes_url"
   }
 }
 
-variable "domain_name" {
-  type        = string
-  description = "Domain name for the Cognito user pool"
+variable "clients" {
+  description = "Map of Cognito user pool clients configuration"
+  type = map(object({
+    name                                 = string
+    generate_secret                      = optional(bool)
+    allowed_oauth_flows                  = optional(list(string))
+    allowed_oauth_flows_user_pool_client = optional(bool)
+    allowed_oauth_scopes                 = optional(list(string))
+    callback_urls                        = optional(list(string))
+    logout_urls                          = optional(list(string))
+    supported_identity_providers         = optional(list(string))
+    refresh_token_validity               = optional(number)
+    access_token_validity                = optional(number)
+    id_token_validity                    = optional(number)
+    token_validity_units                 = optional(map(string))
+    enable_token_revocation              = optional(bool)
+    prevent_user_existence_errors        = optional(string)
+    explicit_auth_flows                  = optional(list(string))
+  }))
+  default = {}
 }
 
-variable "certificate_arn" {
-  type        = string
-  description = "ARN of the ACM certificate to use for the domain"
+variable "domains" {
+  description = "Map of Cognito user pool domain configuration"
+  type = map(object({
+    domain_name     = string
+    certificate_arn = optional(string)
+  }))
+  default = {}
+}
+
+variable "create_identity_pool" {
+  description = "Whether to create a Cognito identity pool"
+  type        = bool
+  default     = false
+}
+
+variable "identity_pool_config" {
+  description = "Configuration for the Cognito identity pool"
+  type = object({
+    allow_unauthenticated_identities = optional(bool)
+    server_side_token_check          = optional(bool)
+  })
+  default = null
+}
+
+variable "identity_pool_roles" {
+  description = "IAM roles configuration for the Cognito identity pool"
+  type = object({
+    authenticated_role_arn   = string
+    unauthenticated_role_arn = optional(string)
+  })
+  default = null
 }
 
 variable "identity_pool_name" {
-  type        = string
   description = "Name of the Cognito identity pool"
-}
-
-variable "allow_unauthenticated_identities" {
-  type        = bool
-  description = "Whether to allow unauthenticated identities"
-  default     = false
-}
-
-variable "server_side_token_check" {
-  type        = bool
-  description = "Whether to enable server-side token validation"
-  default     = false
-}
-
-variable "authenticated_role_arn" {
   type        = string
-  description = "ARN of the IAM role for authenticated users"
-}
-
-variable "unauthenticated_role_arn" {
-  type        = string
-  description = "ARN of the IAM role for unauthenticated users"
   default     = null
 }
