@@ -176,7 +176,7 @@ variable "custom_error_responses" {
     response_page_path    = string
     error_caching_min_ttl = number
   }))
-  default = null
+  default = []
 }
 
 variable "basic_auth_users" {
@@ -186,7 +186,7 @@ variable "basic_auth_users" {
   }))
 }
 
-variable "basic_auth_passwords" {
+variable "basic_auth_user_pass_map" {
   description = "Map of usernames to passwords for basic authentication"
   type        = map(string)
 }

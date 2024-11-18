@@ -1,7 +1,7 @@
 locals {
   basic_auth_credentials = jsonencode({
     for user in var.basic_auth_users :
-    user.username => var.basic_auth_passwords[user.username]
+    user.username => var.basic_auth_user_pass_map[user.username]
   })
 }
 
@@ -119,12 +119,12 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "custom_error_response" {
-    for_each = var.custom_error_responses != null ? var.custom_error_responses : []
+    for_each = var.custom_error_responses
     content {
-      error_code            = custom_error_responses.value.error_code
-      response_code         = custom_error_responses.value.response_code
-      response_page_path    = custom_error_responses.value.response_page_path
-      error_caching_min_ttl = custom_error_responses.value.error_caching_min_ttl
+      error_code            = custom_error_response.value.error_code
+      response_code         = custom_error_response.value.response_code
+      response_page_path    = custom_error_response.value.response_page_path
+      error_caching_min_ttl = custom_error_response.value.error_caching_min_ttl
     }
   }
 }
