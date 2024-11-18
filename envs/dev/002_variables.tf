@@ -1,4 +1,4 @@
-# Define state configuration to match the backend configuration in common/dev.tfbackend
+# Define state configuration to match the backend configuration in common/main.tfbackend
 variable "common_conf_state" {
   description = "Variables about Terraform state backend for Common Configurations"
   type = object({
