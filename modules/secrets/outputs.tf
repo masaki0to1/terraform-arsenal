@@ -1,6 +1,6 @@
 output "attrs" {
   value = {
-    prefix = var.prefix
+    secret_name      = var.secret_name
     decrypted_secret = local.decrypted_secret
   }
   sensitive = true

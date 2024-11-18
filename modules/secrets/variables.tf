@@ -1,3 +1,8 @@
+variable "is_basic_auth_pass" {
+  type        = string
+  description = "Whether this is a password for Basic Authentication"
+}
+
 variable "aws_profile" {
   type        = string
   description = "AWS profile name to use for KMS encryption/decryption"
@@ -8,15 +13,15 @@ variable "env" {
   description = "Environment name (e.g. dev, stg, prod) used for credential file path"
 }
 
-variable "prefix" {
+variable "secret_name" {
   type        = string
-  description = "Prefix for encrypted/decrypted file names"
+  description = "Secret name"
 }
 
-variable "plain_text" {
+variable "plain_secret" {
   type        = string
+  description = "Direct input of secret value to be encrypted"
   default     = ""
-  description = "Plain text to be encrypted. If empty, decryption will be performed"
 }
 
 variable "kms_key_alias" {
@@ -30,8 +35,8 @@ variable "password_change_indicator" {
 
 variable "keep_count" {
   type        = number
-  default     = 3
   description = "Number of encrypted files to keep (older files will be deleted)"
+  default     = 3
 }
 
 variable "cred_dir" {
@@ -44,13 +49,8 @@ variable "cred_file" {
   description = "Credential file name"
 }
 
-variable "is_basic_auth_pass" {
-  type        = string
-  description = "Whether this is a password for Basic Authentication"
-}
-
 variable "auth_user" {
-  description = "User name for Basic Authentication"
   type        = string
+  description = "User name for Basic Authentication"
   default     = null
 }
