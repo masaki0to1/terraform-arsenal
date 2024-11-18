@@ -80,16 +80,24 @@ resource "aws_cognito_user_pool_client" "this" {
   name         = each.value.name
   user_pool_id = aws_cognito_user_pool.this.id
 
-  # 基本設定
+  # basic settings
   generate_secret                      = try(each.value.generate_secret, false)
   allowed_oauth_flows                  = try(each.value.allowed_oauth_flows, [])
   allowed_oauth_flows_user_pool_client = try(each.value.allowed_oauth_flows_user_pool_client, true)
   allowed_oauth_scopes                 = try(each.value.allowed_oauth_scopes, [])
   callback_urls                        = try(each.value.callback_urls, [])
   logout_urls                          = try(each.value.logout_urls, [])
-  supported_identity_providers         = try(each.value.supported_identity_providers, keys(aws_cognito_identity_provider.this))
+  supported_identity_providers = try(
+    coalesce(
+      each.value.supported_identity_providers,
+      contains(keys(var.identity_providers), each.key) ?
+      [lookup(var.identity_providers, each.key).provider_name] :
+      ["COGNITO"]
+    ),
+    ["COGNITO"]
+  )
 
-  # トークン設定
+  # token settings
   refresh_token_validity = try(each.value.refresh_token_validity, 30)
   access_token_validity  = try(each.value.access_token_validity, 1)
   id_token_validity      = try(each.value.id_token_validity, 1)
@@ -103,7 +111,7 @@ resource "aws_cognito_user_pool_client" "this" {
     }
   }
 
-  # その他のオプション設定
+  # other option settings
   enable_token_revocation       = try(each.value.enable_token_revocation, true)
   prevent_user_existence_errors = try(each.value.prevent_user_existence_errors, "ENABLED")
   explicit_auth_flows           = try(each.value.explicit_auth_flows, [])
