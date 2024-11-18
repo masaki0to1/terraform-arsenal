@@ -34,7 +34,7 @@ module "s3_bucket_admin_logging" {
 module "s3_bucket_policy_resources_origin" {
   source = "../../modules/s3_bucket_policy"
 
-  bucket_id = module.s3_bucket_resources_origin.attrs.bucket_id
+  bucket_id = module.s3_bucket_resources_origin.attrs.id
   policy_statements = [
     {
       Sid    = "AllowCloudFrontAccess"
@@ -60,7 +60,7 @@ module "s3_bucket_policy_resources_origin" {
 module "s3_bucket_policy_admin_origin" {
   source = "../../modules/s3_bucket_policy"
 
-  bucket_id = module.s3_bucket_admin_origin.attrs.bucket_id
+  bucket_id = module.s3_bucket_admin_origin.attrs.id
   policy_statements = [
     {
       Sid    = "AllowCloudFrontAccess"

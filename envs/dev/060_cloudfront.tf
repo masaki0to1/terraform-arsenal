@@ -38,9 +38,9 @@ module "landing_page_cfd_admin" {
   comment    = "${local.name_prefix}-basic-auth"
   is_publish = true
   basic_auth_users = [
-    { username = var.user_admin }
+    { username = var.authuser_admin }
   ]
-  basic_auth_passwords = module.secret_authpass_admin.auth_user_pass_map
+  basic_auth_user_pass_map = module.secret_authpass_admin.auth_user_pass_map
 
   oac_name    = "${local.name_prefix}-admin-oac"
   domain_name = module.s3_bucket_admin_origin.attrs.bucket_regional_domain_name

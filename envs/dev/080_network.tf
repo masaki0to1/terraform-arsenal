@@ -33,13 +33,13 @@ module "igw" {
 module "nat_1a" {
   source    = "../../modules/nat_gateway"
   eip_id    = module.eip_nat_1a.attrs.id
-  subnet_id = module.vpc_core.public_subnets["public-1a"].id
+  subnet_id = module.vpc_core.public_subnets["public_1a"].id
 }
 
 module "nat_1c" {
   source    = "../../modules/nat_gateway"
   eip_id    = module.eip_nat_1c.attrs.id
-  subnet_id = module.vpc_core.public_subnets["public-1c"].id
+  subnet_id = module.vpc_core.public_subnets["public_1c"].id
 }
 
 # VPC Routing
@@ -55,8 +55,8 @@ module "vpc_routing_public" {
   }
   # public subnets share a common route table
   subnet_ids = [
-    module.vpc_core.public_subnets["public-1a"].id,
-    module.vpc_core.public_subnets["public-1c"].id
+    module.vpc_core.public_subnets["public_1a"].id,
+    module.vpc_core.public_subnets["public_1c"].id
   ]
 }
 
@@ -79,7 +79,7 @@ module "vpc_routing_private_1a" {
     # }
   }
   subnet_ids = [
-    module.vpc_core.private_subnets["private-1a"].id
+    module.vpc_core.private_subnets["private_1a"].id
   ]
 }
 
@@ -94,6 +94,6 @@ module "vpc_routing_private_1c" {
     }
   }
   subnet_ids = [
-    module.vpc_core.private_subnets["private-1c"].id
+    module.vpc_core.private_subnets["private_1c"].id
   ]
 }

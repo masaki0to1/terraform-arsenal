@@ -1,11 +1,23 @@
+data "terraform_remote_state" "common" {
+  backend = "s3"
+  config = {
+    region  = var.common_conf_state.region
+    bucket  = var.common_conf_state.bucket
+    key     = var.common_conf_state.key
+    profile = var.common_conf_state.aws_profile
+  }
+}
+
 locals {
   # basic settings
-  aws_profile       = "tf-user@Sandbox"
-  env               = "dev"
-  project           = "example"
-  service           = "service"
-  owner             = "owner"
-  region            = "ap-northeast-1"
+  aws_default_profile = "tf-user@Sandbox"
+  env                 = "dev"
+  default_region      = data.terraform_remote_state.common.outputs.local.default_region
+  project             = data.terraform_remote_state.common.outputs.local.project
+  service             = data.terraform_remote_state.common.outputs.local.service
+  owner               = data.terraform_remote_state.common.outputs.local.owner
+
+  # timestamp settings
   utc_timestamp     = timestamp()
   offset_hours      = 9 # Offset to JST
   jst_timestamp     = timeadd(local.utc_timestamp, "${local.offset_hours}h")
@@ -13,6 +25,9 @@ locals {
 
   # naming rule (e.g. dev-example-service)
   name_prefix = join("-", [local.env, local.project, local.service])
+
+  # base domain (e.g. dev.example-service)
+  base_domain = join(".", [local.env, "${local.project}-${local.service}"])
 
   base_tags = {
     Env       = local.env
@@ -78,13 +93,13 @@ locals {
   }
 
   cognito_conf = {
-    user_pool_client = {
-      generate_secret                      = true # for backend
-      allowed_oauth_flows                  = ["code"]
-      allowed_oauth_flows_user_pool_client = true
-      enable_token_revocation              = true
-      prevent_user_existence_errors        = "ENABLED"
-    }
+    # user_pool_client = {
+    #   generate_secret                      = true # for backend
+    #   allowed_oauth_flows                  = ["code"]
+    #   allowed_oauth_flows_user_pool_client = true
+    #   enable_token_revocation              = true
+    #   prevent_user_existence_errors        = "ENABLED"
+    # }
 
     line_identity_provider = {
       name = "line"
@@ -94,14 +109,13 @@ locals {
         attributes_url                = "https://api.line.me/oauth2/v2.1/userinfo"
         attributes_url_add_attributes = false # for LINE OIDC
         attributes_request_method     = "GET"
-        authorize_scopes              = "email profile openid"
+        authorize_scopes              = "email openid profile"
         authorize_url                 = "https://access.line.me/oauth2/v2.1/authorize"
         token_url                     = "https://api.line.me/oauth2/v2.1/token"
         jwks_uri                      = "https://api.line.me/oauth2/v2.1/certs"
       }
     }
   }
-
 
   public_alb_conf = {
     internal                   = false

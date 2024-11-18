@@ -8,6 +8,5 @@ module "acm" {
   providers = {
     aws          = aws
     aws.virginia = aws.virginia
-    aws.route53  = aws.route53
   }
 }
