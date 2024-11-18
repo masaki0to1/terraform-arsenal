@@ -4,6 +4,9 @@
 # secrets file
 .decrypted_*
 
+# tfvars file
+*.tfvars
+
 # tfstate files
 *.tfstate
 *.tfstate.*
