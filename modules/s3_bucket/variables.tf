@@ -3,6 +3,12 @@ variable "bucket_name" {
   type        = string
 }
 
+variable "enable_cors" {
+  description = "Flag to enable/disable CORS configuration for the S3 bucket"
+  type        = bool
+  default     = false
+}
+
 variable "cors_rules" {
   description = "CORS rule config"
   type = list(object({
@@ -12,5 +18,8 @@ variable "cors_rules" {
     expose_headers  = optional(list(string))
     max_age_seconds = optional(number)
   }))
-  default = []
+  default = [{
+    allowed_methods = ["GET"]
+    allowed_origins = ["*"]
+  }]
 }
