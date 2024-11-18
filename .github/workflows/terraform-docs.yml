@@ -1,0 +1,36 @@
+name: Terraform Documentation
+
+on:
+  push:
+    paths:
+      - 'terraform/modules/**/*.tf'
+      - 'tools/terraform_docs/**/*.py'
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Install dependencies
+        run: |
+          cd tools
+          pip install -r requirements.txt
+          
+      - name: Generate documentation
+        run: |
+          cd tools/terraform_docs
+          python main.py
+          
+      - name: Commit documentation changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add terraform/docs/
+          git commit -m "Update Terraform documentation" || echo "No changes to commit"
+          git push
