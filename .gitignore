@@ -48,6 +48,7 @@ Thumbs.db
 
 # Python related
 __pycache__/
+.venv/
 *.py[cod]
 *$py.class
 *.so
