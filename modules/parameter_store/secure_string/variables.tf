@@ -9,7 +9,7 @@ variable "secure_param_name" {
 }
 
 variable "secure_param_value" {
-  description = "Value of the secure parameter" 
+  description = "Value of the secure parameter"
   type        = string
   sensitive   = true
 }

@@ -1,7 +1,7 @@
 variable "string_params" {
   description = "List of string parameters to store in Parameter Store"
   type = list(object({
-    name = string
+    name  = string
     value = string
   }))
 }
