@@ -56,5 +56,6 @@ Run the following command from the repository root:
 ```bash
 # Generate documentation and run validations
 cd tools
+pip install -r requirements.txt
 python -m terraform_docs.main --modules-path ../modules
 ```
